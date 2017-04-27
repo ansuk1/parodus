@@ -147,7 +147,7 @@ add_dependencies(libcimplog cimplog)
 ExternalProject_Add(wrp-c
 	DEPENDS trower-base64 msgpack cimplog
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_prefix/wrp-c
-    GIT_REPOSITORY https://github.com/Comcast/wrp-c.git
+    GIT_REPOSITORY https://github.com/ansuk1/wrp-c.git
     GIT_TAG "master"
     CMAKE_ARGS += -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
                   -DMSGPACK_ENABLE_CXX=OFF
@@ -165,7 +165,7 @@ add_dependencies(libwrp-c wrp-c)
 ExternalProject_Add(libparodus
     DEPENDS trower-base64 msgpack nanomsg wrp-c
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/_prefix/libparodus
-    GIT_REPOSITORY https://github.com/Comcast/libparodus.git
+    GIT_REPOSITORY https://github.com/ansuk1/libparodus.git
     GIT_TAG "master"
     CMAKE_ARGS += -DCMAKE_INSTALL_PREFIX=${INSTALL_DIR}
     		  -DMAIN_PROJ_BUILD=ON
@@ -208,5 +208,5 @@ endif ()
 link_directories ( ${LIBRARY_DIR} ${COMMON_LIBRARY_DIR} ${LIBRARY_DIR64} )
 add_subdirectory(src)
 if (BUILD_TESTING)
-    add_subdirectory(tests)
+    #add_subdirectory(tests)
 endif (BUILD_TESTING)

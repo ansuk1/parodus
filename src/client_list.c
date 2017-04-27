@@ -20,6 +20,21 @@ static reg_list_item_t * g_head = NULL;
 /*                             External functions                             */
 /*----------------------------------------------------------------------------*/
 
+reg_list_item_t * get_curr_node(char * mac , char * service)
+{
+   reg_list_item_t * temp;
+   printf("%s entered with mac : %s service : %s \n",__func__,mac,service);
+   temp = g_head;
+   while (temp) {
+     printf("%s entered with temp mac : %s service : %s \n",__func__,temp->hw_mac,temp->service_name);
+     if ((strstr(mac, temp->hw_mac ) != NULL) && (strstr( service, temp->service_name) !=NULL))
+         break;
+     temp = temp->next;
+   }
+   printf("WARNING!!!!!!!!!!!  current_node %p %d %s\n",temp,__LINE__,__FILE__);
+   return temp;
+}
+
 reg_list_item_t * get_global_node(void)
 {
     return g_head;
@@ -32,11 +47,21 @@ int get_numOfClients()
 /** To add clients to registered list ***/
 
 int addToList( wrp_msg_t **msg)
-{   
+{
+
+    reg_list_item_t *regitered_node = get_curr_node((*msg)->u.reg.hw_mac, (*msg)->u.reg.service_name);
     //new_node indicates the new clients which needs to be added to list
     int rc = -1;
     int sock;
     int retStatus = -1;
+    if(regitered_node) {
+       printf ( " %s current socket value is : %d , " , __func__,regitered_node->sock);
+       if (regitered_node->sock >0 )
+       {
+         printf ( " %s WARNING !!!!!!!!!!!!!!!current socket is valid %d retrun here for mac %s " , __func__,regitered_node->sock, regitered_node->hw_mac);
+         return 0;     
+       }
+    }  
     sock = nn_socket( AF_SP, NN_PUSH );
     ParodusPrint("sock created for adding entries to list: %d\n", sock);
     if(sock >= 0)
@@ -57,10 +82,20 @@ int addToList( wrp_msg_t **msg)
             }
             else
             {
-            	reg_list_item_t *new_node = NULL;
-		new_node=(reg_list_item_t *)malloc(sizeof(reg_list_item_t));
-		if(new_node)
-		{
+                if (regitered_node) {
+                    // update the socket
+                    printf("%s, updating sock value to :%d for mac : %s \n", __func__,sock,regitered_node->hw_mac );
+                    regitered_node->sock = sock;
+                    numOfClients = numOfClients + 1;
+                    ParodusInfo("sending auth status to reg client\n");
+                    retStatus = sendAuthStatus(regitered_node);
+
+                }
+                else {
+            	   reg_list_item_t *new_node = NULL;
+		   new_node=(reg_list_item_t *)malloc(sizeof(reg_list_item_t));
+		   if(new_node)
+		   {
     			memset( new_node, 0, sizeof( reg_list_item_t ) );
     			new_node->sock = sock;
     			ParodusPrint("new_node->sock is %d\n", new_node->sock);
@@ -68,10 +103,12 @@ int addToList( wrp_msg_t **msg)
     			
 	                ParodusPrint("(*msg)->u.reg.service_name is %s\n", (*msg)->u.reg.service_name);
 	                ParodusPrint("(*msg)->u.reg.url is %s\n", (*msg)->u.reg.url);
+                        ParodusPrint("(*msg)->u.reg.hw-mac is %s\n", (*msg)->u.reg.hw_mac);
 
 	                strncpy(new_node->service_name, (*msg)->u.reg.service_name, strlen((*msg)->u.reg.service_name)+1);
 	                strncpy(new_node->url, (*msg)->u.reg.url, strlen((*msg)->u.reg.url)+1);
-
+                        strncpy(new_node->hw_mac, (*msg)->u.reg.hw_mac, strlen((*msg)->u.reg.hw_mac)+1);
+                        //new_node->active = FALSE;  // for test we made it FALSE
 	                new_node->next=NULL;
 	                 
 	                if (g_head == NULL) //adding first client
@@ -106,6 +143,7 @@ int addToList( wrp_msg_t **msg)
 	                        ParodusError("nanomsg client registration failed\n");
 	                        
 	                }
+                    }
 	            }
             }
     }
@@ -114,6 +152,7 @@ int addToList( wrp_msg_t **msg)
             ParodusError("Unable to create socket (errno=%d, %s)\n",errno, strerror(errno));
             
     }
+    ParodusPrint("addToList have items  %d\n",numOfClients);
     ParodusPrint("addToList return %d\n", retStatus);
     return retStatus;
    
@@ -166,7 +205,8 @@ int sendAuthStatus(reg_list_item_t *new_node)
      
 int deleteFromList(char* service_name)
 {
- 	reg_list_item_t *prev_node = NULL, *curr_node = NULL;
+ 	//reg_list_item_t *prev_node = NULL;
+ 	reg_list_item_t  *curr_node = NULL;
 
 	if( NULL == service_name ) 
 	{
@@ -175,7 +215,7 @@ int deleteFromList(char* service_name)
 	}
 	ParodusInfo("service to be deleted: %s\n", service_name);
 
-	prev_node = NULL;
+	//prev_node = NULL;
 	curr_node = g_head ;	
 
 	// Traverse to get the link to be deleted
@@ -183,7 +223,9 @@ int deleteFromList(char* service_name)
 	{
 		if(strcmp(curr_node->service_name, service_name) == 0)
 		{
-			ParodusPrint("Found the node to delete\n");
+			ParodusPrint("Found the node to delete.... but we are not deleting .. just updating sock to zero\n");
+
+#if 0    // just update the scoket ... dont delte from reg list  
 			if( NULL == prev_node )
 			{
 				ParodusPrint("need to delete first client\n");
@@ -199,12 +241,14 @@ int deleteFromList(char* service_name)
 			free( curr_node );
 			curr_node = NULL;
 			ParodusInfo("Deleted successfully and returning..\n");
+#endif
+                        curr_node->sock =0;
 			numOfClients =numOfClients - 1;
 			ParodusPrint("numOfClients after delte is %d\n", numOfClients);
 			return 0;
 		}
 		
-		prev_node = curr_node;
+		//prev_node = curr_node;
 		curr_node = curr_node->next;
 	}
 	ParodusError("Could not find the entry to delete from list\n");

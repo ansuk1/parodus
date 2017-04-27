@@ -48,7 +48,7 @@ void *serviceAliveTask()
 			        //sending svc msg to all the clients every 30s
 			        temp = get_global_node();
 			        size = (size_t) nbytes;
-			        while(NULL != temp)
+			        while(NULL != temp && temp->sock > 0)
 			        {
 				        byte = nn_send (temp->sock, svc_bytes, size, 0);
 				

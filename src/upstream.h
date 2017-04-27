@@ -12,7 +12,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
+#include "config.h"
 /*----------------------------------------------------------------------------*/
 /*                               Data Structures                              */
 /*----------------------------------------------------------------------------*/
@@ -32,7 +32,7 @@ void *handle_upstream();
 void *processUpstreamMessage();
 
 void sendUpstreamMsgToServer(void **resp_bytes, size_t resp_size);
-
+void set_para_config(ParodusCfg* parodusCfg_tar);
 #ifdef __cplusplus
 }
 #endif

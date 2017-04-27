@@ -28,6 +28,7 @@ extern "C" {
  * @param[in] msgSize message size
  */
 void listenerOnMessage(void * msg, size_t msgSize);
+void StartPThread(void);
 
 #ifdef __cplusplus
 }

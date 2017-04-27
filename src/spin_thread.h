@@ -18,7 +18,7 @@ extern "C" {
 /*----------------------------------------------------------------------------*/
 
 void StartThread(void *(*start_routine) (void *));
-
+void *push_message_function();
 
 #ifdef __cplusplus
 }

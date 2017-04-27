@@ -17,6 +17,8 @@ typedef struct reg_list_item
 	int sock;
 	char service_name[32];
 	char url[100];
+	char hw_mac[64];
+	bool active;
 	struct reg_list_item *next;
 } reg_list_item_t;
 
@@ -37,6 +39,8 @@ int deleteFromList(char* service_name);
 int get_numOfClients();
 
 reg_list_item_t * get_global_node(void);
+
+reg_list_item_t * get_curr_node(char * mac , char * service);
 
 #ifdef __cplusplus
 }
